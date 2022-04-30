@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualise Path Findiing</title>
+</head>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.4.1/lib/p5.js"></script>
+<body>
+    
+</body>
+<script>
+    // Just create the pMap (line 6) and put starting point and ending point (line 12) 
+
+function setup(){
+    createCanvas(2000,2000);
+    background(255);
+    const pMap = [1, 1, 0, 1, 0, 1, 1, 
+                  0, 1, 1, 1, 0, 0, 1,
+                  0, 1, 0, 1, 1, 1 ,1];
+    pOutBuffer = [];
+    pOutBuffer[11] = undefined;
+//                        startx starty endx endy   PMap  width   height  OutBuffer
+    [grid,path] = FindPath( 0,     0,    6,   0,    pMap,   7,      3,  pOutBuffer, 12);
+    nStartX = 0;
+    nStartY = 0;
+    disti = 0
+    notext = false
+    x1=-1,y1=-1,x2=-1,y2=-1;
+    k=0
+    console.log(grid,path);
+    fill(0)
+}
+function draw(){
+    if(disti/100 <= (path.length) && !notext)
+        for(let i = 0; i < grid.length; i++){
+            for(let j = 0; j < grid[i].length; j++){
+                if(grid[i][j] == disti/100)
+                    text(grid[i][j], i*50, j*50+25);
+            }
+        }
+    if(!notext)
+        disti++;
+    if(disti/100 > (path.length) && !notext){
+        notext = true;
+    }
+    if(notext && (k/100) < (path.length-1)){
+        if(k%100 == 0){
+            circle(path[k/100].x*50+25, path[k/100].y*50+25, 10);
+            x1 = path[k/100].x*50+25;
+            y1 = path[k/100].y*50+25;
+            x2 = path[k/100+1].x*50+25;
+            y2 = path[k/100+1].y*50+25;
+        }else{
+            rect(x1,y1,1,1);
+        }
+        k++;
+        if(x1 - x2 == 0)
+            if(y1 < y2)
+                y1+=0.5
+            else
+                y1-=0.5
+        if(y1 - y2 == 0)
+            if(x1 < x2)
+                x1+=0.5
+            else
+                x1-=0.5
+    }else{
+        if(k/100 == (path.length-1)){
+            fill(0,0,255);
+            circle(path[k/100].x*50+25, path[k/100].y*50+25, 10);
+        }
+    }
+
+}
+
+function FindPath(nStartX, nStartY,
+    nTargetX, nTargetY, 
+    pMap, nMapWidth, nMapHeight,
+    pOutBuffer, nOutBufferSize){
+    grid = createMatrix(nMapWidth, nMapHeight,pMap);
+
+    fill(255,0,0);
+    rect(nStartX*50, nStartY*50, 50,50);
+
+    fill(0,255,0);
+    rect(nTargetX*50, nTargetY*50, 50,50);
+    
+    const dx = [1, 0, -1, 0];
+    const dy = [0, 1, 0, -1];
+    q = [];
+    grid[nStartX][nStartY] = 1;
+    q.push({x:nStartX, y:nStartY});
+    found = false
+    while(q.length > 0){
+        p = q.shift();
+        if(p.x == nTargetX && p.y == nTargetY){
+            found = true
+            // break;
+        }
+        for(var i = 0; i < 4; i++){
+            nNewX = p.x + dx[i];
+            nNewY = p.y + dy[i];
+            if(nNewX < 0 || nNewX >= nMapWidth || nNewY < 0 || nNewY >= nMapHeight || grid[nNewX][nNewY] != 0){
+                continue;
+            }
+            if(grid[nNewX][nNewY] == 0){
+                console.log(frameCount)
+                grid[nNewX][nNewY] = grid[p.x][p.y] + 1;
+                // text(grid[nNewX][nNewY], nNewX*50, nNewY*50+25);
+                q.push({x:nNewX, y:nNewY});
+            }
+        }
+    }
+    if(!found)
+        return -1
+    if(found){
+        path = []
+        p = {x:nTargetX, y:nTargetY}
+        path.push(p)
+        while(p.x != nStartX || p.y != nStartY){
+            for(var i = 0; i < 4; i++){
+                nNewX = p.x + dx[i];
+                nNewY = p.y + dy[i];
+                if(nNewX < 0 || nNewX >= nMapWidth || nNewY < 0 || nNewY >= nMapHeight || grid[nNewX][nNewY] != grid[p.x][p.y] - 1){
+                    continue;
+                }
+                p = {x:nNewX, y:nNewY}
+                path.push(p)
+                break;
+            }
+        }
+        // animatePath(grid, path);
+        // drawLine(grid, path);
+    }
+    return [grid, path];
+}
+
+function animatePath(grid,path){
+    path = path.reverse()
+    for(let i = 0; i < path.length; i++){
+        circle(path[i].x*50+25, path[i].y*50+25, 10);
+    }
+}
+function drawLine(grid,path){
+    for(let i = 0; i < path.length-1; i++){
+        let x1,y1,x2,y2;
+        x1 = path[i].x*50+25;
+        y1 = path[i].y*50+25;
+        x2 = path[i+1].x*50+25;
+        y2 = path[i+1].y*50+25;
+        line(x1,y1,x2,y2);
+    }
+}
+function createMatrix(nWidth, nHeight, pMatrix){
+    stroke(0);
+    // fill(0);
+    // rect(0, 0, nWidth, nHeight);
+    console.log(nWidth);
+    let matrix = [];
+    for(let i = 0; i < nWidth; i++){
+        matrix[i] = [];
+        for(let j = 0; j < nHeight; j++){
+            matrix[i][j] = pMatrix[j*nWidth + i];
+            matrix[i][j]--
+            if(matrix[i][j] == 0){
+                fill(255);
+                rect(i*50, j*50, 50,50);
+            }else{
+                fill(100);
+                rect(i*50, j*50, 50,50);
+            }
+            // text(matrix[i][j], i*50, j*50+25);
+        }
+    }
+    return matrix;
+}
+</script>
+</html>
