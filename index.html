@@ -33,16 +33,16 @@ function setup(){
     fill(0)
 }
 function draw(){
-    if(disti/100 <= (path.length) && !notext)
+    if(disti/50 <= (path.length) && !notext)
         for(let i = 0; i < grid.length; i++){
             for(let j = 0; j < grid[i].length; j++){
-                if(grid[i][j] == disti/100)
+                if(grid[i][j] == disti/50)
                     text(grid[i][j], i*50, j*50+25);
             }
         }
     if(!notext)
         disti++;
-    if(disti/100 > (path.length) && !notext){
+    if(disti/50 > (path.length) && !notext){
         notext = true;
     }
     if(notext && (k/50) < (path.length-1)){
